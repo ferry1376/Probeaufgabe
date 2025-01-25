@@ -1,0 +1,53 @@
+name: Maven CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Repository auschecken
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      # 2. Java einrichten
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Maven-Abhängigkeiten cachen
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven
+
+      # 4. Maven-Build und Tests ausführen
+      - name: Build and Test with Maven
+        run: mvn clean install
+
+      # 5. Testberichte bereitstellen (falls vorhanden)
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: target/surefire-reports
+      # Chrome installieren
+      - name: Install Chrome
+        run: sudo apt-get install -y google-chrome-stable
+
+      # Tests mit Chrome Headless ausführen
+      - name: Run Tests
+        run: mvn test -Dwebdriver.chrome.driver=/usr/bin/google-chrome
