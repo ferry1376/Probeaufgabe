@@ -24,7 +24,11 @@ jobs:
           java-version: '23'
           distribution: 'temurin'
 
-      # 3. Maven-Abhängigkeiten cachen
+      # 3. Chrome installieren (vor den Tests erforderlich)
+      - name: Install Chrome
+        run: sudo apt-get install -y google-chrome-stable
+
+      # 4. Maven-Abhängigkeiten cachen
       - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
@@ -33,21 +37,25 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven
 
-      # 4. Maven-Build und Tests ausführen
-      - name: Build and Test with Maven
+      # 5. Maven-Build ausführen
+      - name: Build with Maven
         run: mvn clean install
 
-      # 5. Testberichte bereitstellen (falls vorhanden)
+      # 6. Tests mit Chrome Headless ausführen
+      - name: Run Tests
+        run: mvn test -Dwebdriver.chrome.driver=/usr/bin/google-chrome
+
+      # 7. Testberichte bereitstellen (Surefire-Reports)
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: test-results
           path: target/surefire-reports
-      # Chrome installieren
-      - name: Install Chrome
-        run: sudo apt-get install -y google-chrome-stable
 
-      # Tests mit Chrome Headless ausführen
-      - name: Run Tests
-        run: mvn test -Dwebdriver.chrome.driver=/usr/bin/google-chrome
+      # 8. HTML-Testberichte hochladen (ExtentReports)
+      - name: Upload HTML Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: html-report
+          path: target/ExtentReports
