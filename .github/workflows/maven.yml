@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build:
@@ -24,42 +21,23 @@ jobs:
           java-version: '23'
           distribution: 'temurin'
 
-      # 3. Chrome installieren (für Headless-Tests)
+      # 3. Chrome installieren
       - name: Install Chrome
         run: sudo apt-get install -y google-chrome-stable
 
-      # 4. Maven-Abhängigkeiten cachen
-      - name: Cache Maven dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven
-
-      # 5. Maven-Build und Tests im Headless-Modus ausführen
+      # 4. Maven-Build und Tests ausführen
       - name: Build and Test with Maven
         run: |
           mvn clean install
           mvn test -Dwebdriver.chrome.driver=/usr/bin/google-chrome -Dheadless=true
-        env:
-          MAVEN_OPTS: "-Xmx1024m"
 
-      # 6. Manuelle Erstellung des Zielordners im Repository
-      - name: Create reports directory in repository
-        run: mkdir -p test-reports
-
-      # 7. Kopieren des generierten HTML-Berichts in den Repository-Ordner
-      - name: Copy HTML Report to repository
-        run: cp target/ExtentReports/ExtentReport.html test-reports/
-
-      # 8. Änderungen committen und pushen
-      - name: Commit and Push HTML Report
+      # 5. Änderungen im `target/ExtentReports`-Pfad committen und pushen
+      - name: Commit and Push Report
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add test-reports/ExtentReport.html
-          git commit -m "Add test report"
+          git add target/ExtentReports/ExtentReport.html
+          git commit -m "Update ExtentReport"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
