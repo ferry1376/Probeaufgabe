@@ -1,7 +1,10 @@
-name: Maven CI/CD with ExtentReports Deployment
+name: Maven CI/CD with Conditional ExtentReports Deployment
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -10,29 +13,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Repository auschecken
       - name: Check out code
         uses: actions/checkout@v3
 
-      # 2. Java einrichten
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           java-version: '23'
           distribution: 'temurin'
 
-      # 3. Chrome installieren
       - name: Install Chrome
         run: sudo apt-get install -y google-chrome-stable
 
-      # 4. Maven-Build und Tests ausführen
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven
+
+      - name: Create ExtentReports Directory
+        run: mkdir -p target/ExtentReports
+
       - name: Build and Test with Maven
         run: |
           mvn clean install
           mvn test -Dwebdriver.chrome.driver=/usr/bin/google-chrome -Dheadless=true
+        env:
+          MAVEN_OPTS: "-Xmx1024m"
 
-      # 5. Änderungen im `target/ExtentReports`-Pfad committen und pushen
+      - name: List Target Directory
+        run: ls -R target || echo "Target directory not found"
+
+      - name: Check if ExtentReport Exists
+        id: check_report
+        run: |
+          if [ -f target/ExtentReports/ExtentReport.html ]; then
+            echo "Report found"
+            echo "report_exists=true" >> $GITHUB_ENV
+          else
+            echo "Report not found"
+            echo "report_exists=false" >> $GITHUB_ENV
+          fi
+
       - name: Commit and Push Report
+        if: env.report_exists == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
