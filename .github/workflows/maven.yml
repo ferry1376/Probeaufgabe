@@ -1,4 +1,4 @@
-name: Maven CI
+name: Maven CI/CD with GitHub Pages
 
 on:
   push:
@@ -13,22 +13,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Repository auschecken
+      # 1. Check out the repository
       - name: Check out code
         uses: actions/checkout@v3
 
-      # 2. Java einrichten
+      # 2. Set up JDK
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '23'
           distribution: 'temurin'
 
-      # 3. Chrome installieren
+      # 3. Install Chrome (for headless testing)
       - name: Install Chrome
         run: sudo apt-get install -y google-chrome-stable
 
-      # 4. Maven-Abhängigkeiten cachen
+      # 4. Cache Maven dependencies
       - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
@@ -37,30 +37,25 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven
 
-      # 5. Maven-Build und Tests ausführen
-      - name: Build and Test with Maven
-        run: mvn clean test -Dwebdriver.chrome.driver=/usr/bin/google-chrome
+      # 5. Run Maven build
+      - name: Build with Maven
+        run: mvn clean install
 
-      # 6. Testberichte bereitstellen (Surefire-Reports)
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: target/surefire-reports
+      # 6. Run tests with Chrome headless
+      - name: Run Tests
+        run: mvn test -Dwebdriver.chrome.driver=/usr/bin/google-chrome
 
-      # 7. HTML-Testberichte hochladen (ExtentReports)
-      - name: Upload HTML Report
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: html-report
-          path: target/ExtentReports/ExtentReport.html
-
-      # 8. Bericht auf GitHub Pages bereitstellen
+      # 7. Upload ExtentReports to GitHub Pages
       - name: Deploy to GitHub Pages
         if: always()
         uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
           branch: gh-pages
           folder: target/ExtentReports
+
+      # 8. Optional: Upload test results for debugging
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: target/surefire-reports
