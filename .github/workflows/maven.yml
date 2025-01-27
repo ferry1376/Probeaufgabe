@@ -21,10 +21,10 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          java-version: '23'
+          java-version: '17'
           distribution: 'temurin'
 
-      # 3. Chrome installieren (für die Tests erforderlich)
+      # 3. Chrome installieren
       - name: Install Chrome
         run: sudo apt-get install -y google-chrome-stable
 
@@ -37,15 +37,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven
 
-      # 5. Maven-Build ausführen und Tests im Headless-Modus durchführen
+      # 5. Maven-Build und Tests ausführen
       - name: Build and Test with Maven
-        run: mvn clean test -Dwebdriver.chrome.driver=/usr/bin/google-chrome -Dchrome.options.args="--headless,--no-sandbox,--disable-dev-shm-usage"
+        run: mvn clean test -Dwebdriver.chrome.driver=/usr/bin/google-chrome
 
-
-      # 6. HTML-Testberichte hochladen (ExtentReports)
-      - name: Upload ExtentReports
+      # 6. Testberichte bereitstellen (Surefire-Reports)
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: extentreports
+          name: test-results
+          path: target/surefire-reports
+
+      # 7. HTML-Testberichte hochladen (ExtentReports)
+      - name: Upload HTML Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: html-report
           path: target/ExtentReports/ExtentReport.html
+
+      # 8. Bericht auf GitHub Pages bereitstellen
+      - name: Deploy to GitHub Pages
+        if: always()
+        uses: JamesIves/github-pages-deploy-action@v4.5.0
+        with:
+          branch: gh-pages
+          folder: target/ExtentReports
