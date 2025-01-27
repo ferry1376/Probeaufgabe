@@ -1,4 +1,4 @@
-name: Maven CI/CD with GitHub Pages
+name: Maven CI/CD with ExtentReports Deployment
 
 on:
   push:
@@ -13,22 +13,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Check out the repository
+      # 1. Repository auschecken
       - name: Check out code
         uses: actions/checkout@v3
 
-      # 2. Set up JDK
+      # 2. Java einrichten
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           java-version: '23'
           distribution: 'temurin'
 
-      # 3. Install Chrome (for headless testing)
+      # 3. Chrome installieren (für Headless-Tests)
       - name: Install Chrome
         run: sudo apt-get install -y google-chrome-stable
 
-      # 4. Cache Maven dependencies
+      # 4. Maven-Abhängigkeiten cachen
       - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
@@ -37,25 +37,40 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven
 
-      # 5. Run Maven build
+      # 5. Maven-Build ausführen
       - name: Build with Maven
         run: mvn clean install
 
-      # 6. Run tests with Chrome headless
-      - name: Run Tests
-        run: mvn test -Dwebdriver.chrome.driver=/usr/bin/google-chrome
+      # 6. Tests im Headless-Modus ausführen
+      - name: Run Tests (Headless Mode)
+        run: |
+          mvn test -Dwebdriver.chrome.driver=/usr/bin/google-chrome \
+                   -Dheadless=true
+        env:
+          MAVEN_OPTS: "-Xmx1024m"
 
-      # 7. Upload ExtentReports to GitHub Pages
-      - name: Deploy to GitHub Pages
-        if: always()
-        uses: JamesIves/github-pages-deploy-action@v4.5.0
-        with:
-          branch: gh-pages
-          folder: target/ExtentReports
+      # 7. Überprüfen, ob der ExtentReports-Ordner existiert
+      - name: Check ExtentReports Directory
+        run: ls -R target/ExtentReports || echo "ExtentReports folder not found"
 
-      # 8. Optional: Upload test results for debugging
+      # 8. Testberichte bereitstellen (Surefire-Reports)
       - name: Upload test results
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: test-results
           path: target/surefire-reports
+
+      # 9. HTML-Testberichte bereitstellen (ExtentReports)
+      - name: Upload HTML Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: html-report
+          path: target/ExtentReports
+
+      # 10. Bericht auf GitHub Pages bereitstellen
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: target/ExtentReports
