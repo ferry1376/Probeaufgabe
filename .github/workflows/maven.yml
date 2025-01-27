@@ -58,4 +58,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: html-report
-          path: target/ExtentReports
+          path: target/ExtentReports/*
