@@ -37,44 +37,29 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven
 
-      # 5. Maven-Build ausführen
-      - name: Build with Maven
-        run: mvn clean install
-
-      # 6. Tests im Headless-Modus ausführen
-      - name: Run Tests (Headless Mode)
+      # 5. Maven-Build und Tests im Headless-Modus ausführen
+      - name: Build and Test with Maven
         run: |
-          mvn test -Dwebdriver.chrome.driver=/usr/bin/google-chrome \
-                   -Dheadless=true
+          mvn clean install
+          mvn test -Dwebdriver.chrome.driver=/usr/bin/google-chrome -Dheadless=true
         env:
           MAVEN_OPTS: "-Xmx1024m"
 
-      # 7. Manuelle Erstellung des ExtentReports-Ordners
-      - name: Create ExtentReports Directory
-        run: mkdir -p target/ExtentReports
+      # 6. Manuelle Erstellung des Zielordners im Repository
+      - name: Create reports directory in repository
+        run: mkdir -p test-reports
 
-      # 8. Überprüfen, ob der ExtentReports-Ordner existiert
-      - name: Check ExtentReports Directory
-        run: ls -R target || echo "Target directory not found"
+      # 7. Kopieren des generierten HTML-Berichts in den Repository-Ordner
+      - name: Copy HTML Report to repository
+        run: cp target/ExtentReports/ExtentReport.html test-reports/
 
-      # 9. Testberichte bereitstellen (Surefire-Reports)
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: target/surefire-reports
-
-      # 10. HTML-Testberichte bereitstellen (ExtentReports)
-      - name: Upload HTML Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: html-report
-          path: target/ExtentReports
-
-      # 11. Bericht auf GitHub Pages bereitstellen
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: target/ExtentReports
+      # 8. Änderungen committen und pushen
+      - name: Commit and Push HTML Report
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add test-reports/ExtentReport.html
+          git commit -m "Add test report"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

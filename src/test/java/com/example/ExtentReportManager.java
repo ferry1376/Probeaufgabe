@@ -14,7 +14,7 @@ public class ExtentReportManager {
 
             extent = new ExtentReports();
             extent.attachReporter(spark);
-            extent.setSystemInfo("Tester", "Dein Name");
+            extent.setSystemInfo("Tester", "Farhad Javadi");
             extent.setSystemInfo("Browser", "Chrome");
         }
         return extent;
