@@ -45,7 +45,11 @@ jobs:
       - name: Run Tests
         run: mvn test -Dwebdriver.chrome.driver=/usr/bin/google-chrome
 
-      # 7. Testberichte bereitstellen (Surefire-Reports)
+      # 7. Inhalt des target-Verzeichnisses auflisten
+      - name: List target directory
+        run: ls -R target
+
+      # 8. Testberichte bereitstellen (Surefire-Reports)
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v3
@@ -53,9 +57,9 @@ jobs:
           name: test-results
           path: target/surefire-reports
 
-      # 8. HTML-Testberichte hochladen (ExtentReports)
+      # 9. HTML-Testberichte hochladen (ExtentReports)
       - name: Upload HTML Report
         uses: actions/upload-artifact@v3
         with:
           name: html-report
-          path: target/ExtentReports/*
+          path: target/ExtentReports
