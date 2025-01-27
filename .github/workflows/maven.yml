@@ -50,7 +50,7 @@ jobs:
         if: always()
         uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
-          branch: gh-pages
+          branch: main
           folder: target/ExtentReports
 
       # 8. Optional: Upload test results for debugging
