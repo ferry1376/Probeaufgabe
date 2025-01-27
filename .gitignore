@@ -36,3 +36,8 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+
+# Allow ExtentReports folder and report
+!/target/ExtentReports/
+!/target/ExtentReports/ExtentReport.html
