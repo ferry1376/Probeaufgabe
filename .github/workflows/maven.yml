@@ -49,11 +49,15 @@ jobs:
         env:
           MAVEN_OPTS: "-Xmx1024m"
 
-      # 7. Überprüfen, ob der ExtentReports-Ordner existiert
-      - name: Check ExtentReports Directory
-        run: ls -R target/ExtentReports || echo "ExtentReports folder not found"
+      # 7. Manuelle Erstellung des ExtentReports-Ordners
+      - name: Create ExtentReports Directory
+        run: mkdir -p target/ExtentReports
 
-      # 8. Testberichte bereitstellen (Surefire-Reports)
+      # 8. Überprüfen, ob der ExtentReports-Ordner existiert
+      - name: Check ExtentReports Directory
+        run: ls -R target || echo "Target directory not found"
+
+      # 9. Testberichte bereitstellen (Surefire-Reports)
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v3
@@ -61,14 +65,14 @@ jobs:
           name: test-results
           path: target/surefire-reports
 
-      # 9. HTML-Testberichte bereitstellen (ExtentReports)
+      # 10. HTML-Testberichte bereitstellen (ExtentReports)
       - name: Upload HTML Report
         uses: actions/upload-artifact@v3
         with:
           name: html-report
           path: target/ExtentReports
 
-      # 10. Bericht auf GitHub Pages bereitstellen
+      # 11. Bericht auf GitHub Pages bereitstellen
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
