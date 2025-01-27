@@ -24,6 +24,10 @@ public class LoginPage {
         PageFactory.initElements(driver, this); // Initialisiert die WebElemente
     }
 
+    public void open() {
+        driver.get("https://www.saucedemo.com/"); // Ersetze die URL durch die tatsächliche URL deiner Login-Seite
+    }
+
     // Methode, um Benutzernamen einzugeben
     public void enterUsername(String username) {
         usernameField.sendKeys(username);
