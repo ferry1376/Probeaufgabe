@@ -9,6 +9,8 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.support.ui.Select;
+
 
 public class ProductsPage {
     private WebDriver driver;
@@ -30,6 +32,13 @@ public class ProductsPage {
 
     @FindBy(id = "logout_sidebar_link")
     private WebElement logoutButton;
+
+
+    @FindBy(css = ".inventory_item_price")
+    private List<WebElement> productPrices; // Preise der Produkte
+
+    @FindBy(xpath = "//select[@class='product_sort_container']")
+    private WebElement filterDropdown;
 
 
 
@@ -112,6 +121,39 @@ public class ProductsPage {
             System.err.println("Failed to click the Logout button: " + e.getMessage());
             throw e;
         }
+    }
+
+
+
+    public void applyPriceLowToHighFilter() {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait.until(ExpectedConditions.elementToBeClickable(filterDropdown));
+
+        // Auswahl im Dropdown setzen
+        Select dropdown = new Select(filterDropdown);
+        dropdown.selectByVisibleText("Price (low to high)");
+        System.out.println("Applied filter: Price (Low to High)");
+    }
+
+
+
+    public boolean isSortedByPriceLowToHigh() {
+        if (productPrices.size() < 2) {
+            throw new IllegalStateException("Nicht genügend Produkte, um die Preise zu vergleichen.");
+        }
+
+        // Preis des ersten Produkts
+        String firstPriceText = productPrices.get(0).getText().replace("$", "").trim();
+        double firstPrice = Double.parseDouble(firstPriceText);
+
+        // Preis des letzten Produkts
+        String lastPriceText = productPrices.get(productPrices.size() - 1).getText().replace("$", "").trim();
+        double lastPrice = Double.parseDouble(lastPriceText);
+
+        System.out.println("First Price: " + firstPrice + ", Last Price: " + lastPrice);
+
+        // Überprüfen, ob der letzte Preis größer oder gleich dem ersten Preis ist
+        return lastPrice >= firstPrice;
     }
 
 
